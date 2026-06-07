@@ -33,22 +33,37 @@ def run_normal_scenario():
         else:
             network.put(exact_key, [record])
 
-    print("\n--- THUC THI RANGE QUERY (Muc tieu: 20C den 30C) ---")
-    q_min, q_max = 20, 30
-
+    print("\n--- 1. THUC THI RANGE QUERY: DAI HEP (NARROW: 25C den 26C) ---")
     network.reset_metrics()
-    standard_dht_query(network, q_min, q_max)
-    print(f"-> Standard DHT Message Overhead: {network.message_count} messages")
+    standard_dht_query(network, 25, 26)
+    dht_narrow_msg = network.message_count
+    
+    network.reset_metrics()
+    pht.parallel_range_query("root", 25, 26, [], [])
+    pht_narrow_msg = network.message_count
+    
+    print(f"-> Standard DHT Message Overhead: {dht_narrow_msg} messages")
+    print(f"-> PHT Range Query Message Overhead: {pht_narrow_msg} messages")
+    print(f"   (Nhan xet: Voi dai hep, PHT ton chi phi duyet cay nen Message Overhead gan tuong duong DHT)")
 
+    print("\n--- 2. THUC THI RANGE QUERY: DAI RONG (WIDE: 20C den 30C) ---")
+    network.reset_metrics()
+    standard_dht_query(network, 20, 30)
+    dht_wide_msg = network.message_count
+    
     network.reset_metrics()
     results_pht = []
     visited_prefixes = []
-    pht.parallel_range_query("root", q_min, q_max, results_pht, visited_prefixes)
-    print(f"-> PHT Range Query Message Overhead: {network.message_count} messages")
-
-    print(f"\n[THANH CONG] Gom duoc {len(results_pht)} ban ghi thoa man.")
+    pht.parallel_range_query("root", 20, 30, results_pht, visited_prefixes)
+    pht_wide_msg = network.message_count
     
-    print("\n[OK] Dang render do thi NetworkX Topology...")
+    print(f"-> Standard DHT Message Overhead: {dht_wide_msg} messages")
+    print(f"-> PHT Range Query Message Overhead: {pht_wide_msg} messages")
+    print(f"   (Nhan xet: Voi dai rong, PHT the hien suc manh vuot troi nho co che Cat Tia (Pruning)!)")
+
+    print(f"\n[THANH CONG] Gom duoc {len(results_pht)} ban ghi thoa man trong dai rong.")
+    
+    print("\n[OK] Dang render do thi NetworkX Topology cho Dai Rong (20C - 30C)...")
     draw_network_topology(network, visited_prefixes)
 
 if __name__ == "__main__":
